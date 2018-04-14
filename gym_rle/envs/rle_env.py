@@ -53,7 +53,7 @@ def get_action_meaning(action):
 
 def to_ram(rle):
     ram_size = rle.getRAMSize()
-    ram = np.zeros((ram_size),dtype=np.uint8)
+    ram = np.zeros((ram_size), dtype=np.uint8)
     rle.getRAM(ram)
     return ram
 
@@ -61,7 +61,7 @@ def to_ram(rle):
 class RleEnv(gym.Env, utils.EzPickle):
     metadata = {'render.modes': ['human', 'rgb_array']}
 
-    def __init__(self, game='classic_kong', obs_type='ram', frameskip=(2, 5), repeat_action_probability=0.):
+    def __init__(self, game='classic_kong', obs_type='image', frameskip=(2, 5), repeat_action_probability=0.):
         """Frameskip should be either a tuple (indicating a random range to
         choose from, with the top value exclude), or an int."""
 
@@ -70,8 +70,9 @@ class RleEnv(gym.Env, utils.EzPickle):
 
         self.game_path = self.get_rom_path(game)
 
-        self._obs_type = obs_type
-        self.frameskip = frameskip
+        self._obs_type = 'image'
+        self.frameskip = 4
+
         self.rle = rle_python_interface.RLEInterface()
         self.viewer = None
 
@@ -88,7 +89,7 @@ class RleEnv(gym.Env, utils.EzPickle):
         self._action_set = self.rle.getMinimalActionSet()
         self.action_space = spaces.Discrete(len(self._action_set))
 
-        (screen_width,screen_height) = self.rle.getScreenDims()
+        (screen_width, screen_height) = self.rle.getScreenDims()
         ram_size = self.rle.getRAMSize()
         if self._obs_type == 'ram':
             self.observation_space = spaces.Box(low=np.zeros(ram_size), high=np.zeros(ram_size)+255)
@@ -121,11 +122,11 @@ class RleEnv(gym.Env, utils.EzPickle):
 
         if isinstance(self.frameskip, int):
             num_steps = self.frameskip
-        else:
-            num_steps = self.np_random.randint(self.frameskip[0], self.frameskip[1])
-        for _ in range(num_steps):
+        #else: num_steps = self.np_random.randint(self.frameskip[0], self.frameskip[1])
+        ob = [None] * num_steps
+        for i in range(num_steps):
             reward += self.rle.act(action)
-        ob = self._get_obs()
+            ob.append(self._get_obs)
 
         return ob, reward, self.rle.game_over(), {"rle.lives": self.rle.lives()}
 
